@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block title %}Watchlist{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Your Watchlist</h1>
+        <p class="page-subtitle">Keep an eye on the coins that matter to you.</p>
+    </div>
+</div>
+
+<div class="add-form-card">
+    <form action="{{ url_for('watchlist') }}" method="post" class="inline-form">
+        <select name="coin_id" required>
+            <option value="" disabled selected>Add a coin…</option>
+            {% for cid, info in available_coins.items() %}
+            <option value="{{ cid }}">{{ info.name }} ({{ info.symbol }})</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-primary">Add to Watchlist</button>
+    </form>
+</div>
+
+{% if error %}
+    <div class="api-error"><strong>⚠ {{ error }}</strong></div>
+{% elif not coins %}
+    <div class="empty-state">Your watchlist is empty. Add a coin above to get started.</div>
+{% else %}
+<div class="card-grid">
+    {% for coin in coins %}
+    <div class="coin-card">
+        <div class="coin-card-top">
+            <img src="{{ coin.image }}" alt="{{ coin.name }}" class="coin-icon">
+            <div>
+                <div class="coin-name">{{ coin.name }}</div>
+                <div class="coin-symbol">{{ coin.symbol | upper }}</div>
+            </div>
+        </div>
+        <div class="coin-price">{{ coin.current_price | usd }}</div>
+        <div class="coin-change {{ 'positive' if coin.price_change_percentage_24h and coin.price_change_percentage_24h >= 0 else 'negative' }}">
+            {% if coin.price_change_percentage_24h is not none %}
+                {{ "%.2f" | format(coin.price_change_percentage_24h) }}% (24h)
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <form action="{{ url_for('watchlist_remove') }}" method="post" class="remove-form">
+            <input type="hidden" name="coin_id" value="{{ coin.id }}">
+            <button type="submit" class="btn-remove">Remove</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

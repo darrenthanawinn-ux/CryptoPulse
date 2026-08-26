@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block title %}Portfolio{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Portfolio Simulator</h1>
+        <p class="page-subtitle">Track how much your simulated holdings are worth right now.</p>
+    </div>
+</div>
+
+<div class="add-form-card">
+    <form action="{{ url_for('portfolio') }}" method="post" class="inline-form">
+        <select name="coin_id" required>
+            <option value="" disabled selected>Choose a coin…</option>
+            {% for cid, info in available_coins.items() %}
+            <option value="{{ cid }}">{{ info.name }} ({{ info.symbol }})</option>
+            {% endfor %}
+        </select>
+        <input type="number" step="any" min="0.00000001" name="amount" placeholder="Amount held (e.g. 0.5)" required>
+        <button type="submit" class="btn-primary">Add Holding</button>
+    </form>
+</div>
+
+{% if error %}
+    <div class="api-error"><strong>⚠ {{ error }}</strong></div>
+{% elif not holdings %}
+    <div class="empty-state">You haven't added any holdings yet. Use the form above to simulate your portfolio.</div>
+{% else %}
+<div class="portfolio-total">
+    <span>Total Portfolio Value</span>
+    <strong>{{ total_value | usd }}</strong>
+</div>
+
+<div class="table-wrap">
+    <table class="portfolio-table">
+        <thead>
+            <tr>
+                <th>Coin</th>
+                <th>Amount Held</th>
+                <th>Live Price</th>
+                <th>Value</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in holdings %}
+            <tr>
+                <td class="coin-cell">
+                    <img src="{{ h.image }}" alt="{{ h.name }}" class="coin-icon-sm">
+                    {{ h.name }} <span class="muted">({{ h.symbol | upper }})</span>
+                </td>
+                <td>{{ h.amount | qty }}</td>
+                <td>{{ h.price | usd }}</td>
+                <td class="value-cell">{{ h.value | usd }}</td>
+                <td>
+                    <form action="{{ url_for('portfolio_remove') }}" method="post">
+                        <input type="hidden" name="coin_id" value="{{ h.id }}">
+                        <button type="submit" class="btn-remove">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
